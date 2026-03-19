@@ -1,0 +1,19 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# logs
+logs/
+*.log
+
+# database
+memory_db/
+*.db
+*.sqlite3
+
+# environment
+.env
+venv/
+env/
+.venv/
