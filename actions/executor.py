@@ -38,11 +38,30 @@ class ActionExecutor:
             self.system_actions.search_web(query)
             return f"Searched web for {query}"
 
+        elif action == "open_website":
+            url = params.get("url", "")
+            self.voice.speak(f"Opening {url}.")
+            success, msg = self.system_actions.open_website(url)
+            if not success:
+                self.voice.speak(msg)
+            return msg
+
         elif action == "play_music":
             song = params.get("song_name", "")
             self.voice.speak(f"Playing {song}.")
             self.system_actions.play_music(song)
             return f"Played {song}"
+
+        elif action == "system_control":
+            command = params.get("command", "")
+            success, msg = self.system_actions.system_control(command)
+            self.voice.speak(msg)
+            return msg
+
+        elif action == "restart":
+            self.voice.speak("System restart initiated. Goodbye sir.")
+            self.system_actions.restart()
+            return "Restart initiated"
 
         elif action == "shutdown":
             self.voice.speak("System is shutting down. Goodbye sir.")

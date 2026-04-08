@@ -2,6 +2,7 @@ import os
 import platform
 import webbrowser
 import subprocess
+import urllib.parse
 from utils.logger import info, error
 
 class SystemActions:
@@ -24,9 +25,24 @@ class SystemActions:
 
     def search_web(self, query):
         info(f"Web search: {query}")
-        url = f"https://www.google.com/search?q={query}"
+        encoded = urllib.parse.quote_plus(query)
+        url = f"https://www.google.com/search?q={encoded}"
         webbrowser.open(url)
         return True, f"Searching the web for {query}."
+
+    def open_website(self, url):
+        info(f"Opening website: {url}")
+        try:
+            cleaned = url.strip()
+            if not cleaned:
+                return False, "No website was provided."
+            if not cleaned.startswith("http://") and not cleaned.startswith("https://"):
+                cleaned = f"https://{cleaned}"
+            webbrowser.open(cleaned)
+            return True, f"Opened {cleaned}."
+        except Exception as e:
+            error(f"Failed to open website {url}: {e}")
+            return False, "Failed to open the requested website."
 
     def play_music(self, song_name):
         info(f"Music search: {song_name}")
@@ -45,3 +61,45 @@ class SystemActions:
         except Exception as e:
             error(f"Shutdown failed: {e}")
             return False, "Failed to initiate shutdown."
+
+    def restart(self):
+        info("Initiating system restart.")
+        try:
+            if self.os_system == "Windows":
+                os.system("shutdown /r /t 10")
+            elif self.os_system == "Linux":
+                os.system("systemctl reboot")
+            return True, "System restart sequence initiated."
+        except Exception as e:
+            error(f"Restart failed: {e}")
+            return False, "Failed to initiate restart."
+
+    def system_control(self, command):
+        info(f"System control command: {command}")
+        command = command.lower().strip()
+        try:
+            if self.os_system == "Linux":
+                if command == "volume_up":
+                    subprocess.run(["amixer", "-D", "pulse", "sset", "Master", "5%+"], check=False)
+                    return True, "Volume increased."
+                if command == "volume_down":
+                    subprocess.run(["amixer", "-D", "pulse", "sset", "Master", "5%-"], check=False)
+                    return True, "Volume decreased."
+                if command == "mute":
+                    subprocess.run(["amixer", "-D", "pulse", "sset", "Master", "toggle"], check=False)
+                    return True, "Mute toggled."
+                if command == "lock":
+                    subprocess.run(["xdg-screensaver", "lock"], check=False)
+                    return True, "Screen lock requested."
+                return False, "Unknown system command."
+
+            if self.os_system == "Windows":
+                if command == "lock":
+                    os.system("rundll32.exe user32.dll,LockWorkStation")
+                    return True, "Screen locked."
+                return False, "This system control command is not available on Windows yet."
+
+            return False, "Unsupported operating system."
+        except Exception as e:
+            error(f"System control failed: {e}")
+            return False, "System control command failed."

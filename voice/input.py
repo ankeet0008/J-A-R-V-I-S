@@ -1,19 +1,37 @@
-import speech_recognition as sr
+try:
+    import speech_recognition as sr
+except Exception:
+    sr = None
 from config import WAKE_WORD
 from utils.logger import info, debug
 
 class VoiceInput:
     def __init__(self):
-        self.recognizer = sr.Recognizer()
-        self.microphone = sr.Microphone()
-        
-        with self.microphone as source:
-            info("Calibrating microphone for ambient noise... Please wait.")
-            self.recognizer.adjust_for_ambient_noise(source, duration=2)
-            info("Calibration complete.")
+        self.recognizer = None
+        self.microphone = None
+        self.voice_mode = False
+
+        if sr is None:
+            info("SpeechRecognition is unavailable. Falling back to text input mode.")
+            return
+
+        try:
+            self.recognizer = sr.Recognizer()
+            self.microphone = sr.Microphone()
+            with self.microphone as source:
+                info("Calibrating microphone for ambient noise... Please wait.")
+                self.recognizer.adjust_for_ambient_noise(source, duration=2)
+                info("Calibration complete.")
+            self.voice_mode = True
+        except Exception as e:
+            info(f"Microphone initialization failed ({e}). Falling back to text input mode.")
 
     def listen_for_wake_word(self):
         """Listens continuously until the wake word is detected."""
+        if not self.voice_mode:
+            text = input(f"Type '{WAKE_WORD}' to wake Jarvis: ").strip().lower()
+            return WAKE_WORD in text
+
         print(f"Listening for wake word: '{WAKE_WORD}'...")
         while True:
             try:
@@ -36,6 +54,10 @@ class VoiceInput:
 
     def listen_command(self):
         """Listens for the actual command after wake word."""
+        if not self.voice_mode:
+            text = input("You > ").strip()
+            return text or None
+
         try:
             with self.microphone as source:
                 print("Listening for command...")

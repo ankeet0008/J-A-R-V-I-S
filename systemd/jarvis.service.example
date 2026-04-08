@@ -1,0 +1,14 @@
+[Unit]
+Description=JARVIS Voice Assistant
+After=network.target sound.target
+
+[Service]
+Type=simple
+WorkingDirectory=/path/to/J-A-R-V-I-S-main
+ExecStart=/path/to/python /path/to/J-A-R-V-I-S-main/main.py
+Restart=always
+RestartSec=3
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=default.target
